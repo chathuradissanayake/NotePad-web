@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import NoteForm from '../components/NoteForm';
 import NoteList from '../components/NoteList';
+import NoteModal from '../components/modals/NoteModal';
 import { getNotes, createNote, updateNote, deleteNote } from '../api/notes';
 
 const Home = () => {
   const [notes, setNotes] = useState([]);
   const [editNote, setEditNote] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Fetch notes from backend
   const fetchNotes = async () => {
@@ -32,7 +33,10 @@ const Home = () => {
     fetchNotes();
   };
 
-  const handleEdit = (note) => setEditNote(note);
+  const handleEdit = (note) => {
+    setEditNote(note);
+    setIsModalOpen(true);
+  };
 
   const handleDelete = async (id) => {
     await deleteNote(id);
@@ -41,11 +45,29 @@ const Home = () => {
 
   const clearEdit = () => setEditNote(null);
 
+  const openCreateModal = () => {
+    setEditNote(null);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    clearEdit();
+    setIsModalOpen(false);
+  };
+
   return (
-    <div className="max-w-xl mx-auto mt-10 p-4">
+    <div className="max-w-5xl mx-auto mt-10 p-4">
       <h1 className="text-3xl font-bold mb-4 text-center">My Notepad</h1>
-      <NoteForm onSubmit={handleAdd} noteToEdit={editNote} clearEdit={clearEdit} />
-      <NoteList notes={notes} onEdit={handleEdit} onDelete={handleDelete} />
+
+      <NoteModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onSubmit={handleAdd}
+        noteToEdit={editNote}
+        clearEdit={clearEdit}
+      />
+
+      <NoteList notes={notes} onEdit={handleEdit} onDelete={handleDelete} onCreate={openCreateModal} />
     </div>
   );
 };
