@@ -19,7 +19,7 @@ const NoteItem = ({ note, onEdit, onDelete }) => {
           </button>
           <button
             onClick={() => onDelete(note._id)}
-            className="bg-red-500 text-white px-2 py-1 rounded"
+            className="bg-pink-500 text-white px-2 py-1 rounded"
           >
             Delete
           </button>
