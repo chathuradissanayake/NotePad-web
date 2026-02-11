@@ -57,7 +57,7 @@ const Home = () => {
 
   return (
     <div className="max-w-5xl mx-auto mt-10 p-4">
-      <h1 className="text-3xl font-bold mb-4 text-center">My Notepad</h1>
+      <h1 className="text-3xl font-bold mb-4 text-center">Just Notepad</h1>
 
       <NoteModal
         isOpen={isModalOpen}
