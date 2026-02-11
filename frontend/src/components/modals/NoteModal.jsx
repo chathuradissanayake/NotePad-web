@@ -4,8 +4,9 @@ import Modal from '../common/Modal';
 
 const initialForm = { subject: '', body: '' };
 
-const NoteModal = ({ isOpen, onClose, onSubmit, noteToEdit, clearEdit }) => {
+const NoteModal = ({ isOpen, onClose, onSubmit, noteToEdit, clearEdit, onDelete }) => {
   const [form, setForm] = useState(initialForm);
+  const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     if (noteToEdit) {
@@ -21,6 +22,7 @@ const NoteModal = ({ isOpen, onClose, onSubmit, noteToEdit, clearEdit }) => {
   const handleClose = useCallback(() => {
     clearEdit?.();
     setForm(initialForm);
+    setShowMenu(false);
     onClose?.();
   }, [clearEdit, onClose]);
 
@@ -49,29 +51,60 @@ const NoteModal = ({ isOpen, onClose, onSubmit, noteToEdit, clearEdit }) => {
     [form, onSubmit, onClose]
   );
 
+  const handleDelete = useCallback(() => {
+    if (window.confirm('Are you sure you want to delete this note?')) {
+      onDelete?.(noteToEdit._id);
+      handleClose();
+    }
+  }, [noteToEdit, onDelete, handleClose]);
+
   const isDisabled = !form.subject.trim() || !form.body.trim();
 
   return (
     <Modal isVisible={isOpen} onClose={handleClose} width="max-w-2xl w-full">
-      <div className="bg-gradient-to-br from-cyan-50 to-teal-50 rounded-lg shadow-2xl overflow-hidden">
+      <div className="bg-linear-to-br from-cyan-50 to-teal-50 rounded-lg shadow-2xl overflow-hidden">
         {/* Header with realistic notepad design */}
-        <div className="bg-gradient-to-r from-cyan-600 to-teal-600 px-6 py-4 flex items-center justify-between border-b-4 border-cyan-700">
+        <div className="bg-linear-to-r from-cyan-600 to-teal-600 px-6 py-4 flex items-center justify-between border-b-4 border-cyan-700">
           <div className="flex items-center gap-3">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
             <h2 className="text-xl font-semibold text-white">
               {noteToEdit ? 'Edit Note' : 'New Note'}
             </h2>
           </div>
-          <button
-            onClick={handleClose}
-            className="text-white hover:text-cyan-200 transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-2">
+            {noteToEdit && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="text-white hover:text-cyan-200 transition-colors p-1"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                  </svg>
+                </button>
+                {showMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl z-50">
+                    <button
+                      onClick={handleDelete}
+                      className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-2 font-medium"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Delete Note
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+            <button
+              onClick={handleClose}
+              className="text-white hover:text-cyan-200 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6">
@@ -117,7 +150,7 @@ const NoteModal = ({ isOpen, onClose, onSubmit, noteToEdit, clearEdit }) => {
               className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 ${
                 isDisabled 
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                  : 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-lg hover:shadow-xl'
+                  : 'bg-linear-to-r from-cyan-500 to-teal-500 text-white shadow-lg hover:shadow-xl'
               }`}
             >
               {noteToEdit ? '✓ Update Note' : '+ Add Note'}
@@ -142,6 +175,7 @@ NoteModal.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   noteToEdit: PropTypes.object,
   clearEdit: PropTypes.func,
+  onDelete: PropTypes.func,
 };
 
 NoteModal.defaultProps = {
@@ -149,6 +183,7 @@ NoteModal.defaultProps = {
   onClose: () => {},
   noteToEdit: null,
   clearEdit: () => {},
+  onDelete: () => {},
 };
 
 export default NoteModal;
