@@ -8,7 +8,6 @@ const Home = () => {
   const [editNote, setEditNote] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Fetch notes from backend
   const fetchNotes = async () => {
     const data = await getNotes();
     setNotes(data);
@@ -22,7 +21,6 @@ const Home = () => {
     loadNotes();
   }, []);
 
-  // Handle add or update note
   const handleAdd = async (note) => {
     if (editNote) {
       await updateNote(editNote._id, note);
@@ -56,18 +54,27 @@ const Home = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto mt-10 p-4">
-      <h1 className="text-3xl font-bold mb-4 text-center">Just Notepad</h1>
+    <div className="min-h-screen bg-linear-to-br from-cyan-50 via-teal-50 to-blue-50">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold bg-linear-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent mb-2">
+            Just Notepad
+          </h1>
+          <p className="text-gray-600 text-lg">Your thoughts, organized beautifully</p>
+        </div>
 
-      <NoteModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        onSubmit={handleAdd}
-        noteToEdit={editNote}
-        clearEdit={clearEdit}
-      />
+        <NoteModal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          onSubmit={handleAdd}
+          noteToEdit={editNote}
+          clearEdit={clearEdit}
+          onDelete={handleDelete}
+        />
 
-      <NoteList notes={notes} onEdit={handleEdit} onDelete={handleDelete} onCreate={openCreateModal} />
+        <NoteList notes={notes} onEdit={handleEdit} onCreate={openCreateModal} />
+      </div>
     </div>
   );
 };
