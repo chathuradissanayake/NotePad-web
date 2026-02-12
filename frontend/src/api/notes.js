@@ -1,6 +1,4 @@
-// Use environment variable for flexibility
-const API_URL = import.meta.env.VITE_API_URL || 'http://backend:5000/api/notes';
-
+const API_URL = '/api/notes';
 
 // Get all notes
 export const getNotes = async () => {
