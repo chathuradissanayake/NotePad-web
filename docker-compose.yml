@@ -5,15 +5,15 @@ services:
   backend:
     build: ./backend
     container_name: backend
+    ports:
+      - "5000:5000"
     env_file:
       - ./backend/.env
-    expose:
-      - "5000:5000"   # only internal docker network
 
   frontend:
     build: ./frontend
     container_name: frontend
     ports:
-      - 5173:80"
+      - "5173:80"
     depends_on:
       - backend
