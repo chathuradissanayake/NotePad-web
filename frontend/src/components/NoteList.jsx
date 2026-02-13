@@ -11,7 +11,7 @@ const NoteList = ({ notes, onEdit, onDelete, onCreate }) => {
         <svg className="w-16 h-16 text-cyan-600 mb-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
         </svg>
-        <p className="text-cyan-700 font-semibold text-lg">New Note</p>
+        <p className="text-cyan-600 font-semibold text-lg">New Note</p>
       </div>
       <div className="col-span-full text-center py-12">
         <p className="text-gray-500 text-xl">No notes yet. Create your first note!</p>
@@ -28,7 +28,7 @@ const NoteList = ({ notes, onEdit, onDelete, onCreate }) => {
         <svg className="w-16 h-16 text-cyan-600 mb-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
         </svg>
-        <p className="text-cyan-700 font-semibold text-lg">New Note</p>
+        <p className="text-cyan-600 font-semibold text-lg">New Note</p>
       </div>
       {notes.map((note) => (
         <NoteItem key={note._id} note={note} onEdit={onEdit} onDelete={onDelete} />
