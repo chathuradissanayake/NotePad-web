@@ -7,6 +7,10 @@ const {
   updateNote,
   deleteNote
 } = require('../controllers/noteController');
+const auth = require('../middleware/auth');
+
+router.use(auth); // 🔥 protects all routes
+
 
 // CRUD routes
 router.get('/', getNotes);
