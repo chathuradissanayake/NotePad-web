@@ -53,6 +53,13 @@ const Notes = () => {
     setIsModalOpen(false);
   };
 
+  const logout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  window.location.reload();
+};
+
+
   return (
     <div className="min-h-screen bg-linear-to-br from-cyan-50 via-teal-50 to-blue-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -63,6 +70,10 @@ const Notes = () => {
           </h1>
           <p className="text-gray-600 text-lg">Your thoughts, organized beautifully</p>
         </div>
+        <button onClick={logout} className="absolute top-4 right-4">
+          Logout
+        </button>
+
 
         <NoteModal
           isOpen={isModalOpen}
