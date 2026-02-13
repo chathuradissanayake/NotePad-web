@@ -9,6 +9,10 @@ const noteSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  userEmail: {
+    type: String,
+    required: true
+  }
 }, { timestamps: true }); // adds createdAt and updatedAt automatically
 
 module.exports = mongoose.model('Note', noteSchema);
