@@ -9,7 +9,7 @@ const Notes = ({ user }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
-  // ---------------- FETCH NOTES ----------------
+  // Fetch notes on component mount
   const fetchNotes = async () => {
     try {
       const data = await getNotes();
@@ -25,7 +25,7 @@ const Notes = ({ user }) => {
     })();
   }, []);
 
-  // ---------------- CREATE / UPDATE ----------------
+  // Create or update note
   const handleAdd = async (note) => {
     try {
       if (editNote) {
@@ -41,31 +41,30 @@ const Notes = ({ user }) => {
     }
   };
 
-  // ---------------- EDIT ----------------
+  //Edit note
   const handleEdit = (note) => {
     setEditNote(note);
     setIsModalOpen(true);
   };
 
-  // ---------------- DELETE ----------------
+  // Delete note
   const handleDelete = async (id) => {
     await deleteNote(id);
     fetchNotes();
   };
 
-  // ---------------- LOGOUT ----------------
+  // Logout
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     window.location.href = "/";
   };
 
-  // ---------------- UI ----------------
   return (
     <div className="min-h-screen bg-linear-to-br from-cyan-50 to-sky-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
 
-        {/* ================= HEADER ================= */}
+        {/* Header */}
         <div className="mb-12">
           
           {/* Header Container - Flexbox Layout */}
@@ -73,7 +72,7 @@ const Notes = ({ user }) => {
             
             {/* Title Section */}
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-3xl md:text-5xl font-bold bg-linear-to-r from-cyan-600 to-sky-600 bg-clip-text text-transparent mb-1 md:mb-2">
+              <h1 className="text-3xl md:text-5xl font-bold bg-linear-to-r from-cyan-400 to-sky-400 bg-clip-text text-transparent mb-1 md:mb-2">
                 JustNotepad
               </h1>
               <p className="text-gray-600 text-sm md:text-lg">
@@ -81,7 +80,7 @@ const Notes = ({ user }) => {
               </p>
             </div>
 
-            {/* ---------- USER PROFILE ---------- */}
+            {/*User Profile */}
             {user && (
               <div className="relative ml-4">
                 {/* Profile Picture Button */}
@@ -125,7 +124,7 @@ const Notes = ({ user }) => {
           </div>
         </div>
 
-        {/* ================= MODAL ================= */}
+        {/*Modal */}
         <NoteModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
@@ -134,7 +133,7 @@ const Notes = ({ user }) => {
           onDelete={handleDelete}
         />
 
-        {/* ================= NOTES ================= */}
+        {/* Notes */}
         <NoteList
           notes={notes}
           onEdit={handleEdit}
