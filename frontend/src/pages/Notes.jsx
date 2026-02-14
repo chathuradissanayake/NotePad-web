@@ -86,7 +86,7 @@ const Notes = ({ user }) => {
                 {/* Profile Picture Button */}
                 <button
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                  className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-gray-200 hover:border-cyan-500 transition-all overflow-hidden focus:outline-none focus:ring-2 focus:ring-cyan-500 flex-shrink-0"
+                  className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-gray-200 hover:border-cyan-500 transition-all overflow-hidden focus:outline-none focus:ring-2 focus:ring-cyan-500 shrink-0"
                 >
                   <img
                     src={user?.picture || `https://ui-avatars.com/api/?name=${user?.name}`}

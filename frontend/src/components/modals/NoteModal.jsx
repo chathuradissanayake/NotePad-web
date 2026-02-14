@@ -72,7 +72,7 @@ const NoteModal = ({ isOpen, onClose, onSubmit, noteToEdit, clearEdit, onDelete 
       className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex justify-center items-center z-50" 
       onClick={handleBackdropClick}
     >
-      <div className="relative w-full h-full md:w-1/2 md:h-screen shadow-lg rounded-none md:rounded-lg">
+      <div className="relative w-full h-full md:w-full lg:w-full xl:w-2/3 md:h-screen shadow-lg rounded-none md:rounded-lg">
         <div className="bg-linear-to-br from-cyan-50 to-teal-50 h-full rounded-none md:rounded-lg overflow-hidden flex flex-col">
           {/* Header with realistic notepad design */}
           <div className="bg-linear-to-r from-cyan-400 to-sky-400 px-4 md:px-6 py-4 flex items-center justify-between border-b-4 border-sky-500">
