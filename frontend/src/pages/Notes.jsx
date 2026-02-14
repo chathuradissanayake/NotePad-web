@@ -71,11 +71,11 @@ const Notes = ({ user }) => {
           <div className="flex items-center justify-between mb-4">
             
             {/* Title Section */}
-            <div className="flex-1 text-center md:text-left">
+            <div className="flex-1 text-left">
               <h1 className="text-3xl md:text-5xl font-bold bg-linear-to-r from-cyan-400 to-sky-400 bg-clip-text text-transparent mb-1 md:mb-2">
                 JustNotepad
               </h1>
-              <p className="text-gray-600 text-sm md:text-lg">
+              <p className="text-gray-600 font-light text-md">
                 Your thoughts, organized beautifully
               </p>
             </div>
