@@ -12,7 +12,12 @@ const noteSchema = new mongoose.Schema({
   userEmail: {
     type: String,
     required: true
-  }
-}, { timestamps: true }); // adds createdAt and updatedAt automatically
+  },
+  images: [
+    {
+      type: String
+    }
+  ]
+}, { timestamps: true });
 
 module.exports = mongoose.model('Note', noteSchema);
