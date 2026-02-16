@@ -1,10 +1,7 @@
 const Note = require('../models/Note.js');
-const { PutObjectCommand } = require("@aws-sdk/client-s3");
+const { PutObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const s3 = require("../config/s3");
 const { v4: uuidv4 } = require("uuid");
-const { DeleteObjectCommand } = require("@aws-sdk/client-s3");
-
-
 
 
 // GET all notes (ONLY logged-in user's notes)
@@ -47,21 +44,41 @@ const createNote = async (req, res) => {
 
     // If images exist
     if (req.files && req.files.length > 0) {
+      // Validate total number of images
+      if (req.files.length > 5) {
+        return res.status(400).json({ message: "Maximum 5 images allowed per note" });
+      }
+
       for (const file of req.files) {
-        const fileName = `notes/${req.user.email}/${uuidv4()}-${file.originalname}`;
+        try {
+          const fileName = `notes/${req.user.email}/${uuidv4()}-${file.originalname}`;
 
-        const uploadParams = {
-          Bucket: process.env.AWS_BUCKET_NAME,
-          Key: fileName,
-          Body: file.buffer,
-          ContentType: file.mimetype,
-        };
+          const uploadParams = {
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Key: fileName,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+          };
 
-        await s3.send(new PutObjectCommand(uploadParams));
+          await s3.send(new PutObjectCommand(uploadParams));
 
-        const imageUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+          const imageUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+          imageUrls.push(imageUrl);
 
-        imageUrls.push(imageUrl);
+        } catch (s3Error) {
+          console.error("S3 Upload Error:", s3Error);
+          
+          // Rollback: delete already uploaded images
+          for (const uploadedUrl of imageUrls) {
+            const key = uploadedUrl.split(".amazonaws.com/")[1];
+            await s3.send(new DeleteObjectCommand({
+              Bucket: process.env.AWS_BUCKET_NAME,
+              Key: key,
+            })).catch(err => console.error("Rollback error:", err));
+          }
+          
+          return res.status(500).json({ message: "Failed to upload images to S3" });
+        }
       }
     }
 
@@ -73,10 +90,10 @@ const createNote = async (req, res) => {
     });
 
     const savedNote = await newNote.save();
-
     res.status(201).json(savedNote);
 
   } catch (error) {
+    console.error("Create note error:", error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -108,15 +125,34 @@ const updateNote = async (req, res) => {
 // DELETE note (only owner can delete)
 const deleteNote = async (req, res) => {
   try {
-    const deletedNote = await Note.findOneAndDelete({
+    const note = await Note.findOne({
       _id: req.params.id,
-      userEmail: req.user.email, // 🔥 ownership check
+      userEmail: req.user.email,
     });
 
-    if (!deletedNote) return res.status(404).json({ message: 'Note not found' });
+    if (!note) return res.status(404).json({ message: "Note not found" });
 
-    res.json({ message: 'Note deleted' });
+    // Delete all images from S3
+    const deletePromises = note.images.map(async (imageUrl) => {
+      try {
+        const key = imageUrl.split(".amazonaws.com/")[1];
+        await s3.send(new DeleteObjectCommand({
+          Bucket: process.env.AWS_BUCKET_NAME,
+          Key: key,
+        }));
+      } catch (s3Error) {
+        console.error(`Failed to delete image ${imageUrl}:`, s3Error);
+        // Continue deletion even if S3 fails
+      }
+    });
+
+    await Promise.allSettled(deletePromises);
+    await note.deleteOne();
+
+    res.json({ message: "Note and images deleted successfully" });
+
   } catch (error) {
+    console.error("Delete note error:", error);
     res.status(500).json({ message: error.message });
   }
 };
