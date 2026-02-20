@@ -20,16 +20,27 @@ const Notes = ({ user }) => {
     return () => clearTimeout(t);
   }, [search]);
 
+  // admin email filter: dropdown + free text search (admin mode only)
+  const [emailFilter, setEmailFilter] = useState("all"); // "all" or exact email
+  const [emailQuery, setEmailQuery] = useState(""); // partial email search for dropdown filtering
+
+  // derive unique emails from notes for dropdown
+  const emailOptions = useMemo(() => {
+    const set = new Set(notes.map((n) => n.userEmail).filter(Boolean));
+    return Array.from(set).sort();
+  }, [notes]);
+
   // decode role once from token
+  const token = user?.token ?? null;
   const isAdmin = useMemo(() => {
     try {
-      if (!user?.token) return false;
-      const payload = JSON.parse(atob(user.token.split(".")[1]));
+      if (!token) return false;
+      const payload = JSON.parse(atob(token.split(".")[1]));
       return payload?.role === "admin";
     } catch {
       return false;
     }
-  }, [user?.token]);
+  }, [token]);
 
   // admin mode persisted (only for admins)
   const [isAdminMode, setIsAdminMode] = useState(() => {
@@ -142,21 +153,38 @@ const Notes = ({ user }) => {
 
   // filter notes client-side by subject, body or date (created/updated)
   const displayedNotes = useMemo(() => {
-    if (!debouncedSearch) return notes;
+    if (!debouncedSearch && !emailQuery && emailFilter === "all") return notes;
     const q = debouncedSearch.toLowerCase();
+    const eq = emailQuery.trim().toLowerCase();
+
     return notes.filter((n) => {
-      if (n.subject?.toLowerCase().includes(q)) return true;
-      if (n.body?.toLowerCase().includes(q)) return true;
-      const created = n.createdAt ? new Date(n.createdAt).toLocaleString() : "";
-      const updated = n.updatedAt ? new Date(n.updatedAt).toLocaleString() : "";
-      if (created.toLowerCase().includes(q) || updated.toLowerCase().includes(q)) return true;
-      // also allow ISO / YYYY-MM-DD searches
-      const createdIso = n.createdAt ? new Date(n.createdAt).toISOString().split("T")[0] : "";
-      const updatedIso = n.updatedAt ? new Date(n.updatedAt).toISOString().split("T")[0] : "";
-      if (createdIso.includes(q) || updatedIso.includes(q)) return true;
-      return false;
+      // email filters (admin only)
+      if (inAdminMode) {
+        if (emailFilter !== "all" && (n.userEmail || "").toLowerCase() !== emailFilter.toLowerCase()) {
+          return false;
+        }
+        if (eq && !(n.userEmail || "").toLowerCase().includes(eq)) {
+          return false;
+        }
+      }
+
+      if (q) {
+        if (n.subject?.toLowerCase().includes(q)) return true;
+        if (n.body?.toLowerCase().includes(q)) return true;
+        const created = n.createdAt ? new Date(n.createdAt).toLocaleString() : "";
+        const updated = n.updatedAt ? new Date(n.updatedAt).toLocaleString() : "";
+        if (created.toLowerCase().includes(q) || updated.toLowerCase().includes(q)) return true;
+        // also allow ISO / YYYY-MM-DD searches
+        const createdIso = n.createdAt ? new Date(n.createdAt).toISOString().split("T")[0] : "";
+        const updatedIso = n.updatedAt ? new Date(n.updatedAt).toISOString().split("T")[0] : "";
+        if (createdIso.includes(q) || updatedIso.includes(q)) return true;
+        return false;
+      }
+
+      // if only email filters are applied and passed above, keep the note
+      return true;
     });
-  }, [notes, debouncedSearch]);
+  }, [notes, debouncedSearch, inAdminMode, emailFilter, emailQuery]);
 
   return (
     <div
@@ -168,7 +196,7 @@ const Notes = ({ user }) => {
     >
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
-        <header className="mb-12">
+        <header className="mb-10">
           <div className="mb-4">
             <div className="flex items-start sm:items-center justify-between gap-3">
               <div className="flex-1 text-left">
@@ -180,14 +208,14 @@ const Notes = ({ user }) => {
                   JustNotepad {isAdmin && <span className="inline-block px-2 py-1 text-xs text-red-400 rounded-full">Admin</span>}
                 </h1>
                 <p className="text-gray-600 font-light text-md">
-                  {inAdminMode ? "Admin Dashboard — All Notes" : "Your thoughts, organized beautifully"}
+                  {inAdminMode ? "Admin Dashboard | All Notes" : "Your thoughts, organized beautifully"}
                 </p>
               </div>
 
               {/* Right controls: desktop shows search + profile, mobile shows only profile (keeps picture to the right of title) */}
               <div className="flex items-center gap-4 ml-4">
                 {/* Desktop search (hidden on mobile) */}
-                <div className="hidden sm:flex items-center bg-white rounded-lg border border-gray-200 px-3 py-2 w-72">
+                <div className={`hidden sm:flex items-center bg-white rounded-lg border ${inAdminMode ? "border-red-200" : "border-cyan-200"} px-3 py-2 w-72`}>
                   <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
                   </svg>
@@ -203,6 +231,31 @@ const Notes = ({ user }) => {
                     </button>
                   )}
                 </div>
+
+                {/* Admin email filter: dropdown + quick search (desktop only, shown only in admin mode) */}
+                {inAdminMode && (
+                  <div className="hidden sm:flex items-center  gap-2 ml-2">
+                    <input
+                      type="text"
+                      value={emailQuery}
+                      onChange={(e) => setEmailQuery(e.target.value)}
+                      placeholder="Filter emails..."
+                      className="text-sm px-2 py-2 border border-red-200 bg-white rounded-md w-40 placeholder-gray-400"
+                    />
+                    <select
+                      value={emailFilter}
+                      onChange={(e) => setEmailFilter(e.target.value)}
+                      className="text-sm px-2 py-2 text-gray-700 border border-red-200 rounded-md bg-white"
+                    >
+                      <option value="all">All users</option>
+                      {emailOptions.map((em) => (
+                        <option key={em} value={em}>
+                          {em}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {/* Profile picture (always visible and stays to the right of title on mobile) */}
                 {user && (
@@ -254,7 +307,7 @@ const Notes = ({ user }) => {
 
             {/* Mobile search row (below title + picture) */}
             <div className="sm:hidden mt-3">
-              <div className="flex items-center bg-white rounded-lg border border-gray-200 px-3 py-2 w-full">
+              <div className={`flex items-center bg-white rounded-lg border ${inAdminMode ? "border-red-200" : "border-cyan-200"} px-3 py-2 w-full`}>
                 <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
                 </svg>
@@ -270,6 +323,31 @@ const Notes = ({ user }) => {
                   </button>
                 )}
               </div>
+
+              {/* Mobile admin email filter (below search) */}
+              {inAdminMode && (
+                <div className="sm:hidden mt-3 flex gap-2">
+                  <input
+                    type="text"
+                    value={emailQuery}
+                    onChange={(e) => setEmailQuery(e.target.value)}
+                    placeholder="Filter emails..."
+                    className="text-sm px-2 py-2 border border-red-200 bg-white rounded-md w-full placeholder-gray-400"
+                  />
+                  <select
+                    value={emailFilter}
+                    onChange={(e) => setEmailFilter(e.target.value)}
+                    className="text-sm px-2 py-2 text-gray-700 border border-red-200 rounded-md bg-white"
+                  >
+                    <option value="all">All users</option>
+                    {emailOptions.map((em) => (
+                      <option key={em} value={em}>
+                        {em}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
         </header>
