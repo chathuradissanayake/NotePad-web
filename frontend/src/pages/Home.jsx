@@ -19,9 +19,12 @@ const Home = ({ setUser }) => {
 
       // store backend JWT
       localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      
+      // Store user with token included
+      const userWithToken = { ...data.user, token: data.token };
+      localStorage.setItem("user", JSON.stringify(userWithToken));
 
-      setUser(data.user);
+      setUser(userWithToken);
 
     } catch (err) {
       console.error(err);
