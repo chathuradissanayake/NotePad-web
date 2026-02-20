@@ -6,10 +6,9 @@ const mongoose = require("mongoose");
 exports.getAllNotes = async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page || "1", 10));
-    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit || "50", 10)));
+    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit || "100", 10))); // default 100
     const skip = (page - 1) * limit;
 
-    // use aggregation to compute a 'recent' field (updatedAt if present and newer, else createdAt)
     const pipeline = [
       {
         $addFields: {
