@@ -76,19 +76,19 @@ const AdminNoteModal = ({ isOpen, onClose, onSubmit, noteToEdit, clearEdit, onDe
       onClick={handleBackdropClick}
     >
       <div className="relative w-full h-full md:w-full lg:w-full xl:w-2/3 md:h-screen shadow-lg rounded-none md:rounded-lg">
-        <div className="bg-linear-to-br from-cyan-50 to-teal-50 h-full rounded-none md:rounded-lg overflow-hidden flex flex-col">
-          <div className="bg-linear-to-r from-cyan-400 to-sky-400 px-4 md:px-6 py-4 flex items-center justify-between border-b-4 border-sky-500">
+        <div className="bg-linear-to-br from-red-50 to-purple-50 h-full rounded-none md:rounded-lg overflow-hidden flex flex-col">
+          <div className="bg-linear-to-r from-red-400 to-purple-400 px-4 md:px-6 py-4 flex items-center justify-between border-b-4 border-red-400">
             <div className="flex flex-col">
               <h2 className="text-lg md:text-xl font-semibold text-white">
                 {noteToEdit ? "Admin: Edit Note" : "Admin: New Note"}
               </h2>
               {noteToEdit?.userEmail && (
-                <p className="text-xs text-cyan-100 mt-1 truncate max-w-lg">
+                <p className="text-xs text-red-100 mt-1 truncate max-w-lg">
                   User: {noteToEdit.userEmail}
                 </p>
               )}
               {tsTime && (
-                <p className="text-xs text-cyan-100 mt-1">
+                <p className="text-xs text-red-100 mt-1">
                   {tsLabel}: {tsTime}
                 </p>
               )}
@@ -99,7 +99,7 @@ const AdminNoteModal = ({ isOpen, onClose, onSubmit, noteToEdit, clearEdit, onDe
                 <div className="relative">
                   <button
                     onClick={() => setShowMenu(!showMenu)}
-                    className="text-white hover:text-cyan-200 transition-colors p-1"
+                    className="text-white hover:text-red-200 transition-colors p-1"
                     aria-label="more"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,7 +121,7 @@ const AdminNoteModal = ({ isOpen, onClose, onSubmit, noteToEdit, clearEdit, onDe
                   )}
                 </div>
               )}
-              <button onClick={handleClose} className="text-white hover:text-cyan-200 transition-colors" aria-label="close">
+              <button onClick={handleClose} className="text-white hover:text-red-200 transition-colors" aria-label="close">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -136,7 +136,7 @@ const AdminNoteModal = ({ isOpen, onClose, onSubmit, noteToEdit, clearEdit, onDe
                 type="text"
                 autoFocus
                 placeholder="Title..."
-                className="w-full text-xl md:text-2xl font-bold bg-transparent border-none outline-none text-gray-800 placeholder-gray-400 pb-2 border-b-2 border-cyan-300 focus:border-cyan-500 transition-colors"
+                className="w-full text-xl md:text-2xl font-bold bg-transparent border-none outline-none text-gray-800 placeholder-gray-400 pb-2 border-b-2 border-red-300 focus:border-red-500 transition-colors"
                 value={form.subject}
                 onChange={handleChange}
                 aria-label="subject"
@@ -162,12 +162,12 @@ const AdminNoteModal = ({ isOpen, onClose, onSubmit, noteToEdit, clearEdit, onDe
               />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-6 pt-4 border-t-2 border-cyan-200">
+            <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-6 pt-4 border-t-2 border-red-200">
               <button
                 type="submit"
                 disabled={isDisabled}
                 className={`flex-1 px-4 md:px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 ${
-                  isDisabled ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-linear-to-r from-cyan-400 to-sky-400 text-white shadow-lg hover:shadow-xl"
+                  isDisabled ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-linear-to-r from-red-400 to-purple-400 text-white shadow-lg hover:shadow-xl"
                 }`}
               >
                 {noteToEdit ? "✓ Update Note" : "+ Add Note"}
