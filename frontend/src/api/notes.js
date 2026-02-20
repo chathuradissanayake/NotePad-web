@@ -1,7 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL || "/api/notes";
 
 // helper to get headers with JWT
-const authHeaders = () => {
+export const authHeaders = () => {
   const token = localStorage.getItem("token");
 
   return {
