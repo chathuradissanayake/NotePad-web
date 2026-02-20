@@ -3,6 +3,7 @@ import NoteList from "../components/NoteList";
 import NoteModal from "../components/NoteModal";
 import AdminNoteList from "../components/admin-notes/AdminNoteList";
 import AdminNoteModal from "../components/admin-notes/AdminNoteModal";
+import LogoutModal from "../components/modals/LogoutModal";
 import { getNotes, createNote, updateNote, deleteNote } from "../api/notes";
 import { getAllNotes as getAdminNotes, deleteAnyNote, updateAnyNote } from "../api/admin";
 
@@ -20,6 +21,7 @@ const Notes = ({ user }) => {
   const [editNote, setEditNote] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // search + debounce
   const [search, setSearch] = useState("");
@@ -129,7 +131,7 @@ const Notes = ({ user }) => {
     setEditNote(null);
   }, []);
 
-  const logout = useCallback(() => {
+  const performLogout = useCallback(() => {
     localStorage.clear();
     window.location.href = "/";
   }, []);
@@ -246,7 +248,7 @@ const Notes = ({ user }) => {
                             )}
                           </div>
 
-                          <button onClick={logout} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                          <button onClick={() => setShowLogoutModal(true)} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
                             Logout
                           </button>
                         </div>
@@ -296,6 +298,13 @@ const Notes = ({ user }) => {
         ) : (
           <NoteModal isOpen={isModalOpen} onClose={closeModal} onSubmit={handleSave} noteToEdit={editNote} onDelete={handleDelete} />
         )}
+
+        <LogoutModal
+          isVisible={showLogoutModal}
+          onClose={() => setShowLogoutModal(false)}
+          onConfirm={performLogout}
+          userName={user?.name}
+        />
 
         {/* Notes */}
         {inAdminMode ? (
