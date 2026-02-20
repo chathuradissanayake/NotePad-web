@@ -9,17 +9,20 @@ const googleLogin = async (req, res) => {
   try {
     const { token } = req.body;
 
-    // 1️⃣ verify token with Google
+    // 1️⃣ Verify token with Google
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
-
     const { sub, email, name, picture } = payload;
 
-    // 2️⃣ find or create user
+    // 2️⃣ Check if email is in admin list
+    const adminEmails = process.env.DEFAULT_ADMIN_EMAILS?.split(',') || [];
+    const isDefaultAdmin = adminEmails.includes(email);
+
+    // 3️⃣ Find or create user
     let user = await User.findOne({ email });
 
     if (!user) {
@@ -28,25 +31,29 @@ const googleLogin = async (req, res) => {
         email,
         name,
         picture,
-        isAdmin: false
+        role: isDefaultAdmin ? "admin" : "user", // ✅ auto-assign admin
       });
+    } else if (isDefaultAdmin && user.role !== "admin") {
+      // Promote existing user to admin if they're in the list
+      user.role = "admin";
+      await user.save();
     }
 
-    // 3️⃣ create app JWT
+    // 4️⃣ Create app JWT (VERY IMPORTANT)
     const appToken = jwt.sign(
       {
         id: user._id,
         email: user.email,
-        isAdmin: user.isAdmin
+        role: user.role, // ✅ must include role
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // 4️⃣ send back to frontend
+    // 5️⃣ Send back to frontend
     res.json({
       token: appToken,
-      user
+      user,
     });
 
   } catch (error) {

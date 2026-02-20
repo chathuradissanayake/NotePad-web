@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import NoteList from "../components/NoteList";
 import NoteModal from "../components/modals/NoteModal";
+import AdminNoteList from "../components/admin-notes/AdminNoteList";
+import AdminNoteModal from "../components/admin-notes/AdminNoteModal";
 import { getNotes, createNote, updateNote, deleteNote } from "../api/notes";
+import { getAllNotes as getAdminNotes, deleteAnyNote, updateAnyNote } from "../api/admin";
 
 const Notes = ({ user }) => {
   const [notes, setNotes] = useState([]);
@@ -9,136 +12,226 @@ const Notes = ({ user }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
-  // Fetch notes on component mount
-  const fetchNotes = async () => {
+  // decode role once from token
+  const isAdmin = useMemo(() => {
     try {
-      const data = await getNotes();
-      setNotes(data);
-    } catch (err) {
-      console.error(err);
+      if (!user?.token) return false;
+      const payload = JSON.parse(atob(user.token.split(".")[1]));
+      return payload?.role === "admin";
+    } catch {
+      return false;
     }
-  };
+  }, [user?.token]);
+
+  // admin mode persisted (only for admins)
+  const [isAdminMode, setIsAdminMode] = useState(() => {
+    return localStorage.getItem("adminMode") === "true";
+  });
+
+  // sync adminMode to localStorage; reset if not admin
+  useEffect(() => {
+    if (isAdmin) {
+      localStorage.setItem("adminMode", String(isAdminMode));
+    } else {
+      localStorage.removeItem("adminMode");
+    }
+  }, [isAdmin, isAdminMode]);
+
+  const toggleAdminMode = useCallback(() => {
+    setIsAdminMode((prev) => {
+      const next = !prev;
+      if (!isAdmin) return false;
+      return next;
+    });
+  }, [isAdmin]);
+
+  // derive effective admin mode (non-admins are never in admin mode)
+  const effectiveIsAdminMode = isAdmin && isAdminMode;
+
+  const inAdminMode = effectiveIsAdminMode;
+
+  // normalize API response to array
+  const toArray = (data) => (Array.isArray(data) ? data : data?.notes ?? []);
+
+  // fetch notes based on mode
+  const fetchNotes = useCallback(async () => {
+    try {
+      const data = inAdminMode ? await getAdminNotes() : await getNotes();
+      setNotes(toArray(data));
+    } catch (err) {
+      console.error("Failed to fetch notes:", err);
+      setNotes([]);
+    }
+  }, [inAdminMode]);
 
   useEffect(() => {
-    (async () => {
-      await fetchNotes();
-    })();
-  }, []);
-
-  // Create or update note
-  const handleAdd = async (note) => {
-    try {
-      if (editNote) {
-        await updateNote(editNote._id, note);
-      } else {
-        await createNote(note);
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const data = inAdminMode ? await getAdminNotes() : await getNotes();
+        if (!cancelled) setNotes(toArray(data));
+      } catch (err) {
+        console.error("Failed to fetch notes:", err);
+        if (!cancelled) setNotes([]);
       }
-      setEditNote(null);
-      setIsModalOpen(false);
-      fetchNotes();
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [inAdminMode]);
 
-  //Edit note
-  const handleEdit = (note) => {
+  // get note id helper
+  const noteId = (note) => note._id || note.id;
+
+  // create or update
+  const handleSave = useCallback(
+    async (payload) => {
+      try {
+        if (editNote) {
+          const id = noteId(editNote);
+          inAdminMode ? await updateAnyNote(id, payload) : await updateNote(id, payload);
+        } else {
+          await createNote(payload);
+        }
+        setEditNote(null);
+        setIsModalOpen(false);
+        await fetchNotes();
+      } catch (err) {
+        console.error("Failed to save note:", err);
+      }
+    },
+    [editNote, inAdminMode, fetchNotes]
+  );
+
+  // edit
+  const handleEdit = useCallback((note) => {
     setEditNote(note);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  // Delete note
-  const handleDelete = async (id) => {
-    await deleteNote(id);
-    fetchNotes();
-  };
+  // delete
+  const handleDelete = useCallback(
+    async (id) => {
+      try {
+        inAdminMode ? await deleteAnyNote(id) : await deleteNote(id);
+        await fetchNotes();
+      } catch (err) {
+        console.error("Failed to delete note:", err);
+      }
+    },
+    [inAdminMode, fetchNotes]
+  );
 
-  // Logout
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+    setEditNote(null);
+  }, []);
+
+  const logout = useCallback(() => {
+    localStorage.clear();
     window.location.href = "/";
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-cyan-50 to-sky-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-
         {/* Header */}
-        <div className="mb-12">
-          
-          {/* Header Container - Flexbox Layout */}
+        <header className="mb-12">
           <div className="flex items-center justify-between mb-4">
-            
-            {/* Title Section */}
             <div className="flex-1 text-left">
               <h1 className="text-3xl md:text-5xl font-bold bg-linear-to-r from-cyan-400 to-sky-400 bg-clip-text text-transparent mb-1 md:mb-2">
                 JustNotepad
               </h1>
               <p className="text-gray-600 font-light text-md">
-                Your thoughts, organized beautifully
+                {inAdminMode ? "Admin Dashboard — All Notes" : "Your thoughts, organized beautifully"}
               </p>
             </div>
 
-            {/*User Profile */}
-            {user && (
-              <div className="relative ml-4">
-                {/* Profile Picture Button */}
-                <button
-                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                  className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-gray-200 hover:border-cyan-500 transition-all overflow-hidden focus:outline-none focus:ring-2 focus:ring-cyan-500 shrink-0"
-                >
-                  <img
-                    src={user?.picture || `https://ui-avatars.com/api/?name=${user?.name}`}
-                    alt="profile"
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                </button>
+            <div className="flex items-center gap-4 ml-4">
+              {/* Admin Toggle */}
+              {isAdmin && (
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+                  <span className="text-xs font-medium text-gray-600">User</span>
+                  <button
+                    onClick={toggleAdminMode}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isAdminMode ? "bg-purple-600" : "bg-gray-300"}`}
+                    aria-label="Toggle admin mode"
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isAdminMode ? "translate-x-6" : "translate-x-1"}`} />
+                  </button>
+                  <span className="text-xs font-medium text-purple-600">Admin</span>
+                </div>
+              )}
 
-                {/* Dropdown Menu */}
-                {isProfileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
-                    <div className="p-4 border-b border-gray-100">
-                      <p className="text-sm font-semibold text-gray-800">{user?.name}</p>
-                      <p className="text-xs text-gray-500 mt-1 break-all">{user?.email}</p>
-                    </div>
-                    <button
-                      onClick={logout}
-                      className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
+              {/* Profile */}
+              {user && (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+                    className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-gray-200 hover:border-cyan-500 transition-all overflow-hidden focus:outline-none focus:ring-2 focus:ring-cyan-500 shrink-0"
+                    aria-label="Profile menu"
+                  >
+                    <img
+                      src={user.picture || `https://ui-avatars.com/api/?name=${user.name}`}
+                      alt={user.name}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </button>
 
-                {/* Click outside to close */}
-                {isProfileMenuOpen && (
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setIsProfileMenuOpen(false)}
-                  />
-                )}
-              </div>
-            )}
+                  {isProfileMenuOpen && (
+                    <>
+                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
+                        <div className="p-4 border-b border-gray-100">
+                          <p className="text-sm font-semibold text-gray-800">{user.name}</p>
+                          <p className="text-xs text-gray-500 mt-1 break-all">{user.email}</p>
+                          {isAdmin && (
+                            <span className="inline-block mt-2 px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-full">
+                              Admin
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={logout}
+                          className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsProfileMenuOpen(false)} />
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </header>
 
-        {/*Modal */}
-        <NoteModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSubmit={handleAdd}
-          noteToEdit={editNote}
-          onDelete={handleDelete}
-        />
+        {/* Modal */}
+        {inAdminMode ? (
+          <AdminNoteModal
+            isOpen={isModalOpen}
+            onClose={closeModal}
+            onSubmit={handleSave}
+            noteToEdit={editNote}
+            onDelete={handleDelete}
+            clearEdit={() => setEditNote(null)}
+          />
+        ) : (
+          <NoteModal
+            isOpen={isModalOpen}
+            onClose={closeModal}
+            onSubmit={handleSave}
+            noteToEdit={editNote}
+            onDelete={handleDelete}
+          />
+        )}
 
         {/* Notes */}
-        <NoteList
-          notes={notes}
-          onEdit={handleEdit}
-          onCreate={() => setIsModalOpen(true)}
-        />
+        {inAdminMode ? (
+          <AdminNoteList notes={notes} onEdit={handleEdit} onDelete={handleDelete} />
+        ) : (
+          <NoteList notes={notes} onEdit={handleEdit} onCreate={() => setIsModalOpen(true)} />
+        )}
       </div>
     </div>
   );
