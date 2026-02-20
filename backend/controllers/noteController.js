@@ -1,14 +1,30 @@
 const Note = require('../models/Note.js');
 
 
-// GET all notes (ONLY logged-in user's notes)
+// GET all notes (ONLY logged-in user's notes) — sort by updatedAt if newer else createdAt, paginated (default 100)
 const getNotes = async (req, res) => {
   try {
-    const notes = await Note
-      .find({ userEmail: req.user.email })   // 🔥 filter by owner
-      .sort({ createdAt: -1 });
+    const page = Math.max(1, parseInt(req.query.page || "1", 10));
+    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit || "100", 10)));
+    const skip = (page - 1) * limit;
 
-    res.json(notes);
+    const matchStage = { $match: { userEmail: req.user.email } };
+    const addRecent = {
+      $addFields: {
+        recent: {
+          $cond: [{ $gt: ["$updatedAt", "$createdAt"] }, "$updatedAt", "$createdAt"],
+        },
+      },
+    };
+
+    const pipeline = [matchStage, addRecent, { $sort: { recent: -1 } }, { $skip: skip }, { $limit: limit }];
+
+    const [notes, total] = await Promise.all([
+      Note.aggregate(pipeline),
+      Note.countDocuments({ userEmail: req.user.email }),
+    ]);
+
+    res.json({ notes, total, page, limit });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

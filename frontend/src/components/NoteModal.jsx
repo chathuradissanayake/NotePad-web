@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
+import NoteDeleteModal from './modals/NoteDeleteModal';
 
 const initialForm = { subject: '', body: '' };
 
 const NoteModal = ({ isOpen, onClose, onSubmit, noteToEdit, clearEdit, onDelete }) => {
   const [form, setForm] = useState(initialForm);
   const [showMenu, setShowMenu] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     if (noteToEdit) {
@@ -22,6 +24,7 @@ const NoteModal = ({ isOpen, onClose, onSubmit, noteToEdit, clearEdit, onDelete 
     clearEdit?.();
     setForm(initialForm);
     setShowMenu(false);
+    setShowDeleteModal(false);
     onClose?.();
   }, [clearEdit, onClose]);
 
@@ -57,8 +60,18 @@ const NoteModal = ({ isOpen, onClose, onSubmit, noteToEdit, clearEdit, onDelete 
   );
 
   const handleDelete = useCallback(() => {
-    if (window.confirm('Are you sure you want to delete this note?')) {
-      onDelete?.(noteToEdit?._id);
+    // open confirmation modal
+    setShowDeleteModal(true);
+    setShowMenu(false);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    try {
+      await onDelete?.(noteToEdit?._id || noteToEdit?.id);
+    } catch (err) {
+      console.error('Delete failed:', err);
+    } finally {
+      setShowDeleteModal(false);
       handleClose();
     }
   }, [noteToEdit, onDelete, handleClose]);
@@ -191,6 +204,13 @@ const NoteModal = ({ isOpen, onClose, onSubmit, noteToEdit, clearEdit, onDelete 
           </form>
         </div>
       </div>
+
+      <NoteDeleteModal
+        isVisible={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        noteTitle={noteToEdit?.subject}
+      />
     </div>
   );
 };
