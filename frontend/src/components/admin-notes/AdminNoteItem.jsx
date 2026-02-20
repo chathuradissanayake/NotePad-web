@@ -10,7 +10,7 @@ const AdminNoteItem = ({ note, onEdit }) => {
   return (
     <div
       onClick={() => onEdit(note)}
-      className="group cursor-pointer bg-linear-to-br from-white to-cyan-50 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 h-62.5 flex flex-col border border-cyan-200"
+      className="group cursor-pointer bg-linear-to-br from-white to-cyan-50 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 h-62.5 flex flex-col border border-red-200"
     >
       <div className="flex-1 p-3 md:p-4 overflow-hidden flex flex-col">
         <h3 className="font-bold text-sm md:text-base mb-1.5 md:mb-2 text-gray-800 line-clamp-1">
@@ -21,7 +21,7 @@ const AdminNoteItem = ({ note, onEdit }) => {
         </p>
       </div>
 
-      <div className="px-3 md:px-4 py-2 md:py-2.5 bg-linear-to-r from-cyan-50 to-teal-50 border-t border-cyan-100 rounded-b-xl shrink-0">
+      <div className="px-3 md:px-4 py-2 md:py-2.5 bg-linear-to-r from-red-50 to-purple-50 border-t border-red-100 rounded-b-xl shrink-0">
         <div className="flex items-center justify-between">
           <p className="flex items-center gap-1">
             <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

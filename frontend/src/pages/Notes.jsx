@@ -132,13 +132,19 @@ const Notes = ({ user }) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-cyan-50 to-sky-50">
+    <div
+      className={`min-h-screen ${
+        inAdminMode
+          ? "bg-linear-to-br from-red-50 via-purple-50 to-purple-100"
+          : "bg-linear-to-br from-cyan-50 to-sky-50"
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <header className="mb-12">
           <div className="flex items-center justify-between mb-4">
             <div className="flex-1 text-left">
-              <h1 className="text-3xl md:text-5xl font-bold bg-linear-to-r from-cyan-400 to-sky-400 bg-clip-text text-transparent mb-1 md:mb-2">
+              <h1 className={`text-3xl md:text-5xl font-bold bg-linear-to-r  bg-clip-text text-transparent mb-1 md:mb-2 ${inAdminMode ? "from-red-400 to-purple-400" : "from-cyan-400 to-sky-400"}`}>
                 JustNotepad
               </h1>
               <p className="text-gray-600 font-light text-md">
@@ -153,12 +159,12 @@ const Notes = ({ user }) => {
                   <span className="text-xs font-medium text-gray-600">User</span>
                   <button
                     onClick={toggleAdminMode}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isAdminMode ? "bg-purple-600" : "bg-gray-300"}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isAdminMode ? "bg-red-400" : "bg-gray-300"}`}
                     aria-label="Toggle admin mode"
                   >
                     <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isAdminMode ? "translate-x-6" : "translate-x-1"}`} />
                   </button>
-                  <span className="text-xs font-medium text-purple-600">Admin</span>
+                  <span className="text-xs font-medium text-red-400">Admin</span>
                 </div>
               )}
 
@@ -167,7 +173,7 @@ const Notes = ({ user }) => {
                 <div className="relative">
                   <button
                     onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-                    className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-gray-200 hover:border-cyan-500 transition-all overflow-hidden focus:outline-none focus:ring-2 focus:ring-cyan-500 shrink-0"
+                    className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-gray-200 hover:border-red-500 transition-all overflow-hidden focus:outline-none focus:ring-2 focus:ring-red-500 shrink-0"
                     aria-label="Profile menu"
                   >
                     <img
