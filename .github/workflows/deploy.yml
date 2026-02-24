@@ -20,7 +20,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
-            cd /home/ubuntu/notepad/NotePad-web
+            cd /home/ubuntu/justnotepad.chatd/JustNotepad-with-Google-Auth
             git pull origin main
             docker-compose down
             docker-compose up --build -d
