@@ -187,7 +187,7 @@ const Notes = ({ user }) => {
                     inAdminMode ? "from-red-400 to-purple-400" : "from-cyan-400 to-sky-400"
                   }`}
                 >
-                  JustNotepad {isAdmin && <span className={`inline-block py-1 text-xs ${inAdminMode ? 'text-red-400' : 'text-cyan-400'} rounded-full`}>Admin</span>}
+                  JustNotepad {isAdmin && <span className={`inline-block py-1 text-xs ${inAdminMode ? 'text-red-400' : 'text-cyan-400'} rounded-full`}>Adminqq</span>}
                 </h1>
                 <p className="text-gray-600 font-light text-md">{inAdminMode ? "Admin Dashboard | All Notes" : "Your thoughts, organized beautifully"}</p>
               </div>
